@@ -1,3 +1,13 @@
+pandas
+numpy
 lxml
 requests
 beautifulsoup4
+black
+flake8
+httpx
+ipython
+pre-commit
+selenium
+tabulate
+flask
