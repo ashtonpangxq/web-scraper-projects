@@ -11,3 +11,5 @@ pre-commit
 selenium
 tabulate
 flask
+ipykernel
+hydra-core
