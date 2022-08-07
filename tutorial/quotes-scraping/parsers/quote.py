@@ -6,7 +6,7 @@ class QuoteParser:
         self.parent = parent
 
     def __repr__(self):
-        return f'<Quote {self.content}, by {self.author}>'
+        return f"<Quote {self.content}, by {self.author}>"
 
     @property
     def content(self):
