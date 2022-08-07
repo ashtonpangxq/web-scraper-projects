@@ -1,3 +1,4 @@
+import pandas as pd
 from bs4 import BeautifulSoup
 import requests
 
@@ -87,7 +88,7 @@ if __name__ == "__main__":
     }
 
     # The webpage URL
-    URL = "https://www.amazon.com/Sony-PlayStation-Pro-1TB-Console-4/dp/B07K14XKZH/"
+    URL = "https://www.amazon.com/s?k=playstation+4&ref=nb_sb_noss_2"
 
     # HTTP Request
     webpage = requests.get(URL, headers=HEADERS)
@@ -95,9 +96,40 @@ if __name__ == "__main__":
     # Soup Object containing all data
     soup = BeautifulSoup(webpage.content, "lxml")
 
-    # Function calls to display all necessary product information
-    print("Product Title =", get_title(soup))
-    print("Product Price =", get_price(soup))
-    print("Product Rating =", get_rating(soup))
-    print("Number of Product Reviews =", get_review_count(soup))
-    print("Availability =", get_availability(soup))
+    # Fetch links as List of Tag Objects
+    links = soup.find_all(
+        "a",
+        attrs={
+            "class": "a-link-normal s-underline-text s-underline-link-text s-link-style a-text-normal"
+        },
+    )
+
+    # Store the links
+    links_list = []
+
+    # Loop for extracting links from Tag Objects
+    for link in links:
+        links_list.append(link.get("href"))
+
+    # Loop for extracting product details from each link
+    amazon_product = {
+        "product_title": [],
+        "product_price": [],
+        "product_rating": [],
+        "no_of_reviews": [],
+        "get_availability": [],
+    }
+
+    for link in links_list:
+
+        new_webpage = requests.get("https://www.amazon.com" + link, headers=HEADERS)
+        new_soup = BeautifulSoup(new_webpage.content, "lxml")
+
+        amazon_product["product_title"].append(get_title(new_soup))
+        amazon_product["product_price"].append(get_price(new_soup))
+        amazon_product["product_rating"].append(get_rating(new_soup))
+        amazon_product["no_of_reviews"].append(get_review_count(new_soup))
+        amazon_product["get_availability"].append(get_availability(new_soup))
+
+    df = pd.DataFrame.from_dict(amazon_product)
+    df.to_csv("amazon_ps4_product_information.csv")
