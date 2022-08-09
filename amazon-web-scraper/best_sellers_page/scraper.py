@@ -1,7 +1,22 @@
 import bs4
 from bs4 import BeautifulSoup
+from selenium import webdriver
 import requests
 import pandas as pd
+from time import sleep
+
+
+def get_page_name(soup: bs4.BeautifulSoup) -> str:
+
+    try:
+        page_name = soup.find(
+            "h1", attrs={"class": "a-size-large a-spacing-medium a-text-bold"}
+        ).string.strip()
+
+    except AttributeError:
+        page_name = "unidentified_page_name"
+
+    return page_name
 
 
 def get_product_placings(soup: bs4.BeautifulSoup) -> bs4.element.ResultSet:
@@ -53,22 +68,25 @@ def get_product_reviews(soup: bs4.BeautifulSoup) -> bs4.element.ResultSet:
 def main() -> None:
     # The Webpage URL
     url = str(input("URL to Scrape: "))
-    filename = str(input("Saved File Name: "))
 
     print(f"Starting Web Scraping from: {url} ...")
 
-    # Headers for request
-    HEADERS = {
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36",
-        "Accept-Language": "en-US, en;q=0.5",
-    }
+    # Initialize driver
+    driver = webdriver.Chrome("../../webdriver/chromedriver_win32/chromedriver")
+    driver.get(url)
 
-    # HTTP Request
-    webpage = requests.get(url, headers=HEADERS)
+    # Scrolls To Bottom of Page to Load the Rest of the Page
+    page_height = driver.execute_script("return document.body.scrollHeight")
+
+    for value in range(0, page_height):
+        driver.execute_script(f"window.scrollTo(0, {value});")
 
     # Soup Object containing all data
-    soup = BeautifulSoup(webpage.content, "lxml")
+    soup = BeautifulSoup(driver.page_source, "lxml")
 
+    driver.quit()
+
+    page_name = get_page_name(soup)
     product_placing = get_product_placings(soup)
     product_names = get_product_names(soup)
     product_ratings = get_product_ratings(soup)
@@ -86,13 +104,15 @@ def main() -> None:
         amazon_products["product_placing"].append(product_placing[i].string.strip())
         amazon_products["product_names"].append(product_names[i].string.strip())
         amazon_products["product_ratings"].append(product_ratings[i].string.strip())
-        amazon_products["no_of_reviews"].append(product_reviews[i].string.strip())
+        amazon_products["no_of_reviews"].append(
+            "".join(product_reviews[i].string.strip().split(","))
+        )
 
     print(f"Web Scraping Successful!")
     print(f"Starting to Export to CSV...")
 
     df = pd.DataFrame.from_dict(amazon_products)
-    df.to_csv(f"{filename}.csv")
+    df.to_csv(f"{'_'.join(page_name.split(' '))}.csv")
 
     return
 
