@@ -1,0 +1,10 @@
+black
+flake8
+flask
+httpx
+ipykernel
+ipython
+lxml
+numpy
+pandas
+scrapy
