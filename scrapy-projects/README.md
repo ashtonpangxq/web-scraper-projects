@@ -53,3 +53,9 @@ To activate scrapy spider, under project base:
 ```bash
 scrapy crawl <spider-name>
 ```
+
+To export results:
+
+```bash
+scrapy crawl <spider-name> -O [<filename.csv>, <filename.json>]
+```

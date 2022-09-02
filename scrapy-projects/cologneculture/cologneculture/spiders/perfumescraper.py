@@ -1,4 +1,6 @@
 import scrapy
+import re
+import json
 
 
 class PerfumeSpider(scrapy.Spider):
@@ -22,9 +24,22 @@ class PerfumeSpider(scrapy.Spider):
 
     def parse_perfume(self, response):
 
-        name = (response.css("h1.product-single__title::text").get(),)
-        price = response.css("span.money::text").get()
-        size_selection = response.css("div.product-form__controls-group")
-        sizes = size_selection.css("option::text").getall()
+        # name = response.css("h1.product-single__title::text").get()
+        # price = response.css("span.money::text").get()
+        # size_selection = response.css("div.product-form__controls-group")
+        # sizes = size_selection.css("option::text").getall()
 
-        yield {"name": name, "price": price, "sizes": sizes}
+        # Get Prices
+        js_data = re.findall("var meta =(.+?);\n", response.body.decode("utf-8"), re.S)
+        ls = json.loads(js_data[0])
+
+        product_variants = ls["product"]["variants"]
+
+        name = []
+        price = []
+
+        for i in range(len(product_variants)):
+            name.append(product_variants[i]["name"])
+            price.append(product_variants[i]["price"] / 100.0)
+
+        yield {"name": name, "price": price}
